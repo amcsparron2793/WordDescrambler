@@ -6,7 +6,12 @@ from nltk.corpus import words
 
 class WordDescrambler:
     def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
+        # TODO: turn these into props so that they can be checked/compared.
+        #  Limit length should not be allowed to be greater than total length,
+        #  and limit length should not be allowed if use all letters is true
         self.use_all_letters = kwargs.get('use_all_letters', True)
+        self.limit_length = kwargs.get('limit_length', None)
+
         self.candidate_letters = [x for x in candidate_letters.lower()]
         self.path_to_wordlist = path_to_wordlist
         if self.path_to_wordlist:
@@ -15,10 +20,10 @@ class WordDescrambler:
             self.path_to_wordlist = None
         self._wordlist = set()
         self.match_list = set()
-        self.limit_length = kwargs.get('limit_length', None)
+
         # TODO: add use basic wordlist
-        self.basic_wordlist = {w for w in words.words('en-basic')}
-        self.full_wordlist = {w for w in words.words()}
+        self.basic_wordlist = {w.lower() for w in words.words('en-basic')}
+        self.full_wordlist = {w.lower() for w in words.words()}
 
     @property
     def Wordlist(self):
