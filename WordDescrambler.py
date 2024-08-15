@@ -16,6 +16,9 @@ class WordDescrambler:
         self._wordlist = set()
         self.match_list = set()
         self.limit_length = kwargs.get('limit_length', None)
+        # TODO: add use basic wordlist
+        self.basic_wordlist = {w for w in words.words('en-basic')}
+        self.full_wordlist = {w for w in words.words()}
 
     @property
     def Wordlist(self):
@@ -28,7 +31,7 @@ class WordDescrambler:
                         for word in f.readlines():
                             self._wordlist.add(word.strip().lower())
             else:
-                self._wordlist = {x for x in words.words()}
+                self._wordlist = self.full_wordlist
         return self._wordlist
 
     @Wordlist.setter
@@ -69,6 +72,6 @@ class WordDescrambler:
 
 
 if __name__ == '__main__':
-    WD = WordDescrambler(candidate_letters='stfaamnrc', use_all_letters=False)#, limit_length=5)#'stfaamnrc')
+    WD = WordDescrambler(candidate_letters='stfaamnrc', use_all_letters=True)#, limit_length=5)#'stfaamnrc')
     WD.search(print_matches=True)
     #print('craftsman' in [''.join(x) for x in permutations('stfaamnrc')])
