@@ -5,14 +5,15 @@ from nltk.corpus import words
 
 
 class WordDescrambler:
+    max_candidate_length = 12
     def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
         # TODO: turn these into props so that they can be checked/compared.
         #  Limit length should not be allowed to be greater than total length,
         #  and limit length should not be allowed if use all letters is true
-        self.use_all_letters = kwargs.get('use_all_letters', True)
+        self.use_all_letters = kwargs.get('use_all_letters', False)
         self.limit_length = kwargs.get('limit_length', None)
 
-        self.candidate_letters = [x for x in candidate_letters.lower()]
+        self._candidate_letters = [x for x in candidate_letters.lower()]
         self.path_to_wordlist = path_to_wordlist
         if self.path_to_wordlist:
             self.path_to_wordlist = Path(path_to_wordlist)
@@ -24,6 +25,19 @@ class WordDescrambler:
         # TODO: add use basic wordlist
         self.basic_wordlist = {w.lower() for w in words.words('en-basic')}
         self.full_wordlist = {w.lower() for w in words.words()}
+
+    @property
+    def candidate_letters(self):
+        if isinstance(self._candidate_letters, list):
+            pass
+        elif isinstance(self._candidate_letters, str):
+            self._candidate_letters = [x for x in self._candidate_letters]
+        if len(self._candidate_letters) > self.max_candidate_length:
+            raise ValueError(f'Too many candidate letters. '
+                             f'Max characters supported is {self.max_candidate_length}')
+        else:
+            pass
+        return self._candidate_letters
 
     @property
     def Wordlist(self):
@@ -57,12 +71,13 @@ class WordDescrambler:
         if self.limit_length:
             self.Wordlist = {x.lower() for x in self.Wordlist if len(x) == self.limit_length}
 
+        print(f"Searching for words made up of {self.candidate_letters}...")
         if self.use_all_letters:
             self._run_permutations(len(self.candidate_letters))
         elif self.limit_length:
             self._run_permutations(self.limit_length)
         else:
-            for r in range(4, len(self.candidate_letters)):
+            for r in range(3, len(self.candidate_letters)):
                 self._run_permutations(r)
 
         print(f"{len(self.match_list)} matches found.")
@@ -77,6 +92,7 @@ class WordDescrambler:
 
 
 if __name__ == '__main__':
-    WD = WordDescrambler(candidate_letters='stfaamnrc', use_all_letters=True)#, limit_length=5)#'stfaamnrc')
+    WD = WordDescrambler(candidate_letters='AndrewMCSpar',
+                         use_all_letters=False)#, limit_length=5)#'stfaamnrc')
     WD.search(print_matches=True)
     #print('craftsman' in [''.join(x) for x in permutations('stfaamnrc')])
