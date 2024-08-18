@@ -1,11 +1,21 @@
 # given a list of letters, find any words that can be made with them (use wordlist) - perfect for multithreading
 import time
+from os import system
+from time import sleep
 
 from Runtime import Runtime
 from pathlib import Path
 from itertools import permutations
 from nltk.corpus import words
 
+
+def sleep_timer(total_sleep_seconds):
+    counter = total_sleep_seconds
+    while counter > 0:
+        print(f'sleeping for {counter} more seconds')
+        time.sleep(1)
+        system('cls')
+        counter -= 1
 
 class WordDescrambler:
     max_candidate_length = 12
@@ -100,10 +110,10 @@ class WordDescrambler:
 if __name__ == '__main__':
     start_time = time.time()
     rt = Runtime(start_time)
-    print(start_time)
-    WD = WordDescrambler(candidate_letters='AndrewMCSpar',
+    #sleep_timer(5)
+
+    WD = WordDescrambler(candidate_letters='Andrewmcspar',
                          use_all_letters=False, use_basic_wordlist=False)#, limit_length=5)#'stfaamnrc')
     WD.search(print_matches=True)
-    # FIXME: this doesnt calculate runtime correctly
-    print(f"program runtime was {rt.runtime_minutes}")
+    print(f"{rt}")
     #print('craftsman' in [''.join(x) for x in permutations('stfaamnrc')])
