@@ -106,6 +106,7 @@ class WordDescrambler:
 
 
 if __name__ == '__main__':
+    # TODO: GUI?
     start_time = time.time()
     rt = Runtime(start_time)
     #sleep_timer(5)
