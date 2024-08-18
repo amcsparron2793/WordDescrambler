@@ -1,7 +1,6 @@
 # given a list of letters, find any words that can be made with them (use wordlist) - perfect for multithreading
 import time
 from os import system
-from time import sleep
 
 from Runtime import Runtime
 from pathlib import Path
@@ -98,13 +97,12 @@ class WordDescrambler:
 
         print(f"{len(self.match_list)} matches found.")
         if print_matches:
-            print("Matching Words: ")
-            for m in self.match_list:
-                print(f"\t{m}")
+            self.print_matches()
 
-
-
-
+    def print_matches(self):
+        print("Matching Words: ")
+        for m in self.match_list:
+            print(f"\t{m}")
 
 
 if __name__ == '__main__':
