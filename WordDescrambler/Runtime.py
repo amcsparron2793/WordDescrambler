@@ -13,11 +13,11 @@ class Runtime:
         self._runtime_timedelta:timedelta or None = None
 
     def __str__(self):
-        return self.runtime_string
+        return self.runtime_timedelta #self.runtime_string
 
     @property
     def runtime_timedelta(self):
-        self._runtime_timedelta = timedelta(seconds=self._runtime_seconds)
+        self._runtime_timedelta = str(timedelta(seconds=self.runtime_seconds))
         return self._runtime_timedelta
 
     @property

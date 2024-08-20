@@ -37,6 +37,7 @@ class WordDescrambler:
 
         self.basic_wordlist = {w.lower() for w in words.words('en-basic')}
         self.full_wordlist = {w.lower() for w in words.words()}
+        self.guess_counter = 0
 
     @property
     def candidate_letters(self):
@@ -74,9 +75,11 @@ class WordDescrambler:
 
     def _run_permutations(self, word_length: int):
         for p in permutations(''.join(self.candidate_letters), word_length):  # , self.Wordlist):
+            self.guess_counter += 1
             if ''.join(p) in self.Wordlist:
                 # print(f"{''.join(p)} was found in candidate letters.")
                 self.match_list.add(''.join(p))
+                print(f"found a match at guess number {self.guess_counter:,}")
 
     def search(self, print_matches: bool = False):
         if self.use_all_letters:
@@ -115,4 +118,7 @@ if __name__ == '__main__':
                          use_all_letters=False, use_basic_wordlist=False)#, limit_length=5)#'stfaamnrc')
     WD.search(print_matches=True)
     print(f"{rt}")
+    with open('./Misc_Project_Files/last_runtime.txt', 'w') as f:
+        f.write(str(rt))
+
     #print('craftsman' in [''.join(x) for x in permutations('stfaamnrc')])
