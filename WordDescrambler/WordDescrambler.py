@@ -58,45 +58,53 @@ class WordDescrambler:
     - print_matches(): Print the matched words.
     """
     max_candidate_length = 12
-    def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
-        config_full_file_location = Path(kwargs.get('config_full_file_location', './cfg/config.ini'))
-        config_filename = config_full_file_location.stem + config_full_file_location.suffix
-        self.config = WordDescramblerConfig(config_filename=config_filename,
-                                            config_dir=config_full_file_location.parent).GetConfig()
+    DEFAULT_CONFIG_PATH = './cfg/config.ini'
 
+    def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
+        self.config = self._load_config(kwargs.get('config_full_file_location', self.DEFAULT_CONFIG_PATH))
+
+        self._initialize_runtime_settings(kwargs)
+
+        self.path_to_wordlist = Path(path_to_wordlist) if path_to_wordlist else Path(
+            self.config.get('WORDLIST', 'path_to_wordlist'))
+
+        self._candidate_letters = self._extract_candidate_letters(candidate_letters)
+        self._initialize_wordlists()
+
+        self.guess_counter = 0
+
+    @staticmethod
+    def _load_config(config_full_file_location: str) -> WordDescramblerConfig:
+        config_full_file_location = Path(config_full_file_location)
+        config_filename = config_full_file_location.stem + config_full_file_location.suffix
+        return WordDescramblerConfig(config_filename=config_filename,
+                                     config_dir=config_full_file_location.parent).GetConfig()
+
+    def _initialize_runtime_settings(self, kwargs: dict):
         self._use_timedelta = kwargs.get('use_timedelta', self.config.getboolean('RUNTIME', 'use_timedelta'))
         self._rt_save_file_path = kwargs.get('rt_save_file_path', self.config.get('RUNTIME', 'save_file_path'))
         self._rt_export_as_json = kwargs.get('rt_export_as_json', self.config.getboolean('RUNTIME_OUTPUT', 'as_json'))
         self._rt_export_as_text = kwargs.get('rt_export_as_text', self.config.getboolean('RUNTIME_OUTPUT', 'as_text'))
-
         self._use_all_letters = kwargs.get('use_all_letters', self.config.getboolean('DEFAULT', 'use_all_letters'))
         self._limit_length = kwargs.get('limit_length', self.config.getint('DEFAULT', 'limit_length'))
         if self._limit_length <= 0:
             self._limit_length = None
         self._min_match_length = kwargs.get('min_match_length', self.config.getint('DEFAULT', 'min_match_length'))
-
         self._verbose_mode = kwargs.get('verbose_mode', self.config.getboolean('DEFAULT', 'verbose_mode'))
         self._print_matches = kwargs.get('print_matches', self.config.getboolean('SEARCH', 'print_matches'))
-
         self._use_basic_wordlist = kwargs.get('use_basic_wordlist',
                                               self.config.getboolean('WORDLIST', 'use_basic_wordlist'))
-
         self.runtime = Runtime(time.time(), use_timedelta=self._use_timedelta)
-        self.path_to_wordlist = Path(path_to_wordlist) if path_to_wordlist else Path(self.config.get('WORDLIST',
-                                                                                                'path_to_wordlist'))
-        # self.path_to_wordlist = Path(self.path_to_wordlist) if self._use_basic_wordlist else self.path_to_wordlist
 
-        self._candidate_letters = self._extract_candidate_letters(candidate_letters)
+    def _initialize_wordlists(self):
         self._wordlist = set()
         self.match_list = set()
-
         self.basic_wordlist = {w.lower() for w in words.words('en-basic')}
         self.full_wordlist = {w.lower() for w in words.words()}
-        self.guess_counter = 0
 
     @staticmethod
     def _extract_candidate_letters(letters: str) -> list:
-        return [char for char in letters.lower()]
+        return list(letters)
 
     @property
     def min_match_length(self) -> int:
