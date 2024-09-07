@@ -57,7 +57,7 @@ class WordDescrambler:
     - search(print_matches): Search for words based on the candidate letters and print the matches.
     - print_matches(): Print the matched words.
     """
-    max_candidate_length = 12
+    MAX_CANDIDATE_LENGTH = 12
     DEFAULT_CONFIG_PATH = './cfg/config.ini'
 
     def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
@@ -133,8 +133,8 @@ class WordDescrambler:
 
     @property
     def candidate_letters(self) -> list:
-        if len(self._candidate_letters) > self.max_candidate_length:
-            raise ValueError(f'Too many candidate letters. Max characters supported is {self.max_candidate_length}')
+        if len(self._candidate_letters) > self.MAX_CANDIDATE_LENGTH:
+            raise ValueError(f'Too many candidate letters. Max characters supported is {self.MAX_CANDIDATE_LENGTH}')
         return self._candidate_letters
 
     @property
