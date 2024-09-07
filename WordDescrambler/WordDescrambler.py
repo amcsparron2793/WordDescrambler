@@ -60,11 +60,10 @@ class WordDescrambler:
     max_candidate_length = 12
     def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
         config_full_file_location = Path(kwargs.get('config_full_file_location', './cfg/config.ini'))
-        just_filename = config_full_file_location.stem + config_full_file_location.suffix
+        config_filename = config_full_file_location.stem + config_full_file_location.suffix
+        self.config = WordDescramblerConfig(config_filename=config_filename,
+                                            config_dir=config_full_file_location.parent).GetConfig()
 
-        WDConfig = WordDescramblerConfig(config_filename=just_filename,
-                                         config_dir=config_full_file_location.parent)
-        self.config = WDConfig.GetConfig()
         self._use_timedelta = kwargs.get('use_timedelta', self.config.getboolean('RUNTIME', 'use_timedelta'))
         self._rt_save_file_path = kwargs.get('rt_save_file_path', self.config.get('RUNTIME', 'save_file_path'))
         self._rt_export_as_json = kwargs.get('rt_export_as_json', self.config.getboolean('RUNTIME_OUTPUT', 'as_json'))
@@ -72,25 +71,22 @@ class WordDescrambler:
 
         self._use_all_letters = kwargs.get('use_all_letters', self.config.getboolean('DEFAULT', 'use_all_letters'))
         self._limit_length = kwargs.get('limit_length', self.config.getint('DEFAULT', 'limit_length'))
+        if self._limit_length <= 0:
+            self._limit_length = None
         self._min_match_length = kwargs.get('min_match_length', self.config.getint('DEFAULT', 'min_match_length'))
+
         self._verbose_mode = kwargs.get('verbose_mode', self.config.getboolean('DEFAULT', 'verbose_mode'))
+        self._print_matches = kwargs.get('print_matches', self.config.getboolean('SEARCH', 'print_matches'))
 
         self._use_basic_wordlist = kwargs.get('use_basic_wordlist',
-                                             self.config.getboolean('WORDLIST', 'use_basic_wordlist'))
+                                              self.config.getboolean('WORDLIST', 'use_basic_wordlist'))
 
-        self.rt = Runtime(time.time(), use_timedelta=self._use_timedelta)
+        self.runtime = Runtime(time.time(), use_timedelta=self._use_timedelta)
+        self.path_to_wordlist = Path(path_to_wordlist) if path_to_wordlist else Path(self.config.get('WORDLIST',
+                                                                                                'path_to_wordlist'))
+        # self.path_to_wordlist = Path(self.path_to_wordlist) if self._use_basic_wordlist else self.path_to_wordlist
 
-        self.path_to_wordlist = path_to_wordlist
-        if self.path_to_wordlist:
-            self.path_to_wordlist = Path(path_to_wordlist)
-            if self._use_basic_wordlist:
-                self._use_basic_wordlist = False
-        else:
-            self.path_to_wordlist = self.config.get('WORDLIST', 'path_to_wordlist')
-
-
-        self._candidate_letters = [x for x in candidate_letters.lower()]
-
+        self._candidate_letters = self._extract_candidate_letters(candidate_letters)
         self._wordlist = set()
         self.match_list = set()
 
@@ -98,19 +94,13 @@ class WordDescrambler:
         self.full_wordlist = {w.lower() for w in words.words()}
         self.guess_counter = 0
 
-    @property
-    def min_match_length(self):
-        """
-        Returns the minimum match length.
+    @staticmethod
+    def _extract_candidate_letters(letters: str) -> list:
+        return [char for char in letters.lower()]
 
-        :return: The minimum match length.
-        :rtype: int
-        :raises ValueError: If the minimum match length is less than the number of candidate letters.
-        """
-        if len(self.candidate_letters) >= self._min_match_length:
-            #print(len(self.candidate_letters), self._min_match_length)
-            pass
-        else:
+    @property
+    def min_match_length(self) -> int:
+        if len(self.candidate_letters) < self._min_match_length:
             raise ValueError("min_match_length must be greater than or equal to the number of candidate letters.")
         return self._min_match_length
 
@@ -134,56 +124,32 @@ class WordDescrambler:
         return self._limit_length
 
     @property
-    def candidate_letters(self):
-        """
-        Returns the list of candidate letters.
-
-        If the candidate letters are already stored as a list, returns the list directly. If the candidate
-        letters are stored as a string, converts each character of the string into a list element.
-
-        If the length of the candidate letters exceeds the maximum candidate length, a `ValueError` is raised.
-
-        :return: The list of candidate letters.
-        """
-        if isinstance(self._candidate_letters, list):
-            pass
-        elif isinstance(self._candidate_letters, str):
-            self._candidate_letters = [x for x in self._candidate_letters]
+    def candidate_letters(self) -> list:
         if len(self._candidate_letters) > self.max_candidate_length:
-            raise ValueError(f'Too many candidate letters. '
-                             f'Max characters supported is {self.max_candidate_length}')
-        else:
-            pass
+            raise ValueError(f'Too many candidate letters. Max characters supported is {self.max_candidate_length}')
         return self._candidate_letters
 
     @property
-    def Wordlist(self):
+    def wordlist(self):
         """
         :return: The wordlist for the software.
         """
         if not self._wordlist:
-            if self.path_to_wordlist:
-                if self.path_to_wordlist.is_dir():
-                    pass
-                elif self.path_to_wordlist.is_file():
-                    with open(self.path_to_wordlist, "r") as f:
-                        for word in f.readlines():
-                            self._wordlist.add(word.strip().lower())
-            else:
-                if self._use_basic_wordlist:
-                    self._wordlist = self.basic_wordlist
-                else:
-                    self._wordlist = self.full_wordlist
+            self._load_wordlist()
         return self._wordlist
 
-    @Wordlist.setter
-    def Wordlist(self, value):
-        """
-        Sets the value of the `Wordlist` property.
-
-        :param value: The new value for the `Wordlist` property.
-        """
+    @wordlist.setter
+    def wordlist(self, value: set):
         self._wordlist = value
+
+    def _load_wordlist(self):
+        if self.path_to_wordlist.is_file():
+            with self.path_to_wordlist.open("r") as file:
+                self._wordlist = {line.strip().lower() for line in file.readlines()}
+        elif self._use_basic_wordlist:
+            self._wordlist = self.basic_wordlist
+        else:
+            self._wordlist = self.full_wordlist
 
     def _run_permutations(self, word_length: int):
         """
@@ -198,15 +164,15 @@ class WordDescrambler:
             obj = Object()
             obj._run_permutations(4)
         """
-        for p in permutations(''.join(self.candidate_letters), word_length):  # , self.Wordlist):
+        for p in permutations(''.join(self.candidate_letters), word_length):  # , self.wordlist):
             self.guess_counter += 1
-            if ''.join(p) in self.Wordlist:
+            if ''.join(p) in self.wordlist:
                 # print(f"{''.join(p)} was found in candidate letters.")
                 self.match_list.add(''.join(p))
                 if self._verbose_mode:
                     print(f"found a match at guess number {self.guess_counter:,}")
 
-    def search(self, print_matches: bool = False):
+    def search(self, **kwargs):
         """
         This method searches for words in a Wordlist object based on certain search parameters and prints the results.
 
@@ -214,12 +180,13 @@ class WordDescrambler:
         :return: None
 
         """
+        print_matches = kwargs.get('print_matches', self._print_matches)
         if self._use_all_letters:
-            self.Wordlist = {x.lower() for x in self.Wordlist if len(x) == len(self.candidate_letters)}
+            self.wordlist = {x.lower() for x in self.wordlist if len(x) == len(self.candidate_letters)}
         else:
-            self.Wordlist = {x.lower() for x in self.Wordlist}
+            self.wordlist = {x.lower() for x in self.wordlist}
         if self.limit_length:
-            self.Wordlist = {x.lower() for x in self.Wordlist if len(x) == self.limit_length}
+            self.wordlist = {x.lower() for x in self.wordlist if len(x) == self.limit_length}
 
         print(f"Searching for words made up of {self.candidate_letters}...")
         if self._use_all_letters:
@@ -234,27 +201,57 @@ class WordDescrambler:
         if print_matches:
             self.print_matches()
 
-        print(f"{self.rt.runtime_string}")
-        self.rt.write_runtime(as_json=True)
+        print(f"{self.runtime.runtime_string}")
+        self.runtime.write_runtime(as_json=True)
 
-    def print_matches(self):
+    @staticmethod
+    def _chunks(iterable, size):
+        """
+        Yield successive n-sized chunks from an iterable.
+
+        :param iterable: The iterable to chunk.
+        :param size: The size of each chunk.
+        :return: Generator of chunks.
+        """
+        for i in range(0, len(iterable), size):
+            yield iterable[i:i + size]
+
+    def _get_words_per_column(self, **kwargs):
+        words_per_column = kwargs.get('words_per_column', self.config.getint('SEARCH', 'words_per_column'))
+        column_number = kwargs.get('column_number', self.config.getint('SEARCH', 'column_number'))
+
+        if words_per_column >= 1 and column_number != 3:
+            raise AttributeError('words_per_column and column number kwargs cannot be used at the same time.')
+        elif words_per_column >= 1:
+            column_number = int(len(self.match_list) / words_per_column)
+            if column_number == 0:
+                column_number = 1
+
+        return column_number
+
+    def print_matches(self, **kwargs):
         """
         Prints the list of matching words.
 
         :return: None
         """
-        print("Matching Words: ")
-        for m in self.match_list:
-            print(f"\t{m}")
+        use_columns = kwargs.get('use_columns', self.config.getboolean('SEARCH', 'use_columns'))
+        print("Matching Words:")
+        if use_columns:
+            column_number = self._get_words_per_column(**kwargs)
+
+            for chunk in self._chunks(list(self.match_list), column_number):
+                print(f"\t{', '.join(chunk)}")
+        else:
+            for match in self.match_list:
+                print(f"\t{match}")
 
 
 if __name__ == '__main__':
     # TODO: GUI?
 
-    WD = WordDescrambler(candidate_letters='AndrewMcspar',
-                         # these are kwargs
-                         use_all_letters=False, use_basic_wordlist=False)#, limit_length=5)#'stfaamnrc')
-    WD.search(print_matches=True)
+    WD = WordDescrambler(candidate_letters='AndrewMcspar')
+    WD.search()
 
 
 

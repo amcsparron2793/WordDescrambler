@@ -3,5 +3,5 @@ __pycache__
 .venv
 /logs/
 /cfg/
-/Misc_Project_Files/last_runtime.*
+/Misc_Project_Files/*last_runtime.*
 

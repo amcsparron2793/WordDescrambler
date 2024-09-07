@@ -173,6 +173,6 @@ class Runtime:
                 json.dump({'program_start_time': self.pretty_start_time,
                            'program_runtime': self.runtime},
                           f, indent=4)
-            print(f"runtime output to {save_file_path}")
+            print(f"runtime output to {save_file_path.resolve()}")
         else:
             raise ValueError("Invalid output format. as_text or as_json must be True.")

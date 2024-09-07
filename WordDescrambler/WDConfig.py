@@ -7,12 +7,12 @@ class WordDescramblerConfig(BetterConfigAJM):
         self.default_config = [{
             'DEFAULT': {
                 'use_all_letters': False,
-                'limit_length': None,
+                'limit_length': 0,
                 'min_match_length': 3,
                 'verbose_mode': False
             },
             'RUNTIME': {
-                'use_timedelta': False,
+                'use_timedelta': True,
                 'save_file_path': './Misc_Project_Files/last_runtime.txt'
             },
             'RUNTIME_OUTPUT': {
@@ -20,9 +20,15 @@ class WordDescramblerConfig(BetterConfigAJM):
                 'as_text': False
             },
             'WORDLIST': {
-                'path_to_wordlist': None,
+                'path_to_wordlist': '',
                 'use_basic_wordlist': False,
 
+            },
+            'SEARCH': {
+                'print_matches': True,
+                'use_columns': True,
+                'words_per_column': 0,
+                'column_number': 3
             }
         }]
         if 'config_list_dict' in kwargs:
