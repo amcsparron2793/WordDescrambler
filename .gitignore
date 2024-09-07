@@ -2,4 +2,6 @@ __pycache__
 .idea
 .venv
 /logs/
+/cfg/
 /Misc_Project_Files/last_runtime.*
+

@@ -7,7 +7,9 @@ class WordDescramblerConfig(BetterConfigAJM):
         self.default_config = [{
             'DEFAULT': {
                 'use_all_letters': False,
-                'use_basic_wordlist': False
+                'limit_length': None,
+                'min_match_length': 3,
+                'verbose_mode': False
             },
             'RUNTIME': {
                 'use_timedelta': False,
@@ -16,6 +18,11 @@ class WordDescramblerConfig(BetterConfigAJM):
             'RUNTIME_OUTPUT': {
                 'as_json': True,
                 'as_text': False
+            },
+            'WORDLIST': {
+                'path_to_wordlist': None,
+                'use_basic_wordlist': False,
+
             }
         }]
         if 'config_list_dict' in kwargs:
