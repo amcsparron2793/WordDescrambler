@@ -1,6 +1,6 @@
 import time
 from datetime import timedelta, datetime
-
+from pathlib import Path
 
 class Runtime:
     """
@@ -66,7 +66,11 @@ class Runtime:
         self._use_timedelta: bool = use_timedelta
 
     def __str__(self):
-        return f"Runtime timer: started on {datetime.fromtimestamp(self.start_time).ctime()}."
+        return f"Runtime timer: started on {self.pretty_start_time}."
+
+    @property
+    def pretty_start_time(self):
+        return datetime.fromtimestamp(self.start_time).ctime()
 
     @property
     def runtime_timedelta(self):
@@ -147,3 +151,28 @@ class Runtime:
         else:
             self._runtime_hours = round(self._runtime_hours, 2)
         return self._runtime_hours
+
+    def write_runtime(self, **kwargs):
+        save_file_path = Path(kwargs.get('save_file_path', './Misc_Project_Files/last_runtime.txt'))
+        as_text = kwargs.get('as_text', False)
+        as_json = kwargs.get('as_json', False)
+
+        if as_text and as_json:
+            raise ValueError("both as_text and as_json cannot be True.")
+        elif as_text:
+            with open(save_file_path, 'w') as f:
+                f.write(str(self))
+                f.write('\n')
+                f.write(self.runtime_string)
+            print(f"runtime output to {save_file_path}")
+        elif as_json:
+            if save_file_path.suffix != '.json':
+                save_file_path = save_file_path.with_suffix('.json')
+            with open(save_file_path, 'w') as f:
+                import json
+                json.dump({'program_start_time': self.pretty_start_time,
+                           'program_runtime': self.runtime},
+                          f, indent=4)
+            print(f"runtime output to {save_file_path}")
+        else:
+            raise ValueError("Invalid output format. as_text or as_json must be True.")

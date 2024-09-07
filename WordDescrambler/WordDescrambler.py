@@ -79,6 +79,13 @@ class WordDescrambler:
 
     @property
     def min_match_length(self):
+        """
+        Returns the minimum match length.
+
+        :return: The minimum match length.
+        :rtype: int
+        :raises ValueError: If the minimum match length is less than the number of candidate letters.
+        """
         if len(self.candidate_letters) >= self._min_match_length:
             #print(len(self.candidate_letters), self._min_match_length)
             pass
@@ -88,6 +95,16 @@ class WordDescrambler:
 
     @property
     def limit_length(self):
+        """
+        :return: The limit length value
+
+        This property is used to limit the length of the candidate letters.
+        If the limit length is set to a value larger than the number of candidate letters, a ValueError is raised.
+        If the flag `use_all_letters` is set to True, the limit length value is set to None,
+        indicating that all candidate letters should be used.
+
+        :rtype: int or None
+        """
         if self._limit_length:
             if self._limit_length > len(self.candidate_letters):
                 raise ValueError("limit length cannot be larger than candidate_letters")
@@ -97,6 +114,16 @@ class WordDescrambler:
 
     @property
     def candidate_letters(self):
+        """
+        Returns the list of candidate letters.
+
+        If the candidate letters are already stored as a list, returns the list directly. If the candidate
+        letters are stored as a string, converts each character of the string into a list element.
+
+        If the length of the candidate letters exceeds the maximum candidate length, a `ValueError` is raised.
+
+        :return: The list of candidate letters.
+        """
         if isinstance(self._candidate_letters, list):
             pass
         elif isinstance(self._candidate_letters, str):
@@ -110,6 +137,9 @@ class WordDescrambler:
 
     @property
     def Wordlist(self):
+        """
+        :return: The wordlist for the software.
+        """
         if not self._wordlist:
             if self.path_to_wordlist:
                 if self.path_to_wordlist.is_dir():
@@ -127,9 +157,26 @@ class WordDescrambler:
 
     @Wordlist.setter
     def Wordlist(self, value):
+        """
+        Sets the value of the `Wordlist` property.
+
+        :param value: The new value for the `Wordlist` property.
+        """
         self._wordlist = value
 
     def _run_permutations(self, word_length: int):
+        """
+        :param word_length: The length of the words to generate permutations for.
+        :return: None
+
+        This method runs permutations of the candidate letters to find matches in the given word list.
+        It increments the guess counter with each iteration and adds any matches found to the match list.
+        If verbose mode is enabled, it also prints the guess number when a match is found.
+
+        Example Usage:
+            obj = Object()
+            obj._run_permutations(4)
+        """
         for p in permutations(''.join(self.candidate_letters), word_length):  # , self.Wordlist):
             self.guess_counter += 1
             if ''.join(p) in self.Wordlist:
@@ -139,6 +186,13 @@ class WordDescrambler:
                     print(f"found a match at guess number {self.guess_counter:,}")
 
     def search(self, print_matches: bool = False):
+        """
+        This method searches for words in a Wordlist object based on certain search parameters and prints the results.
+
+        :param print_matches: A boolean indicating whether to print the found matches.
+        :return: None
+
+        """
         if self.use_all_letters:
             self.Wordlist = {x.lower() for x in self.Wordlist if len(x) == len(self.candidate_letters)}
         else:
@@ -160,6 +214,11 @@ class WordDescrambler:
             self.print_matches()
 
     def print_matches(self):
+        """
+        Prints the list of matching words.
+
+        :return: None
+        """
         print("Matching Words: ")
         for m in self.match_list:
             print(f"\t{m}")
@@ -176,9 +235,7 @@ if __name__ == '__main__':
     WD.search(print_matches=True)
 
     print(f"{rt.runtime_string}")
-    with open('./Misc_Project_Files/last_runtime.txt', 'w') as f:
-        f.write(str(rt))
-        f.write('\n')
-        f.write(rt.runtime_string)
+    rt.write_runtime(as_json=True)
+
 
     #print('craftsman' in [''.join(x) for x in permutations('stfaamnrc')])
