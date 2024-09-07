@@ -6,6 +6,7 @@ from Runtime import Runtime
 from pathlib import Path
 from itertools import permutations
 from nltk.corpus import words
+from WDConfig import WordDescramblerConfig
 
 
 def sleep_timer(total_sleep_seconds):
@@ -57,6 +58,10 @@ class WordDescrambler:
     """
     max_candidate_length = 12
     def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
+        # TODO: unpack this into attributes
+        # self.config = kwargs.get('config', None)
+        self.rt = Runtime(time.time(), use_timedelta=True)
+
         self.use_all_letters = kwargs.get('use_all_letters', False)
         self._limit_length = kwargs.get('limit_length', None)
         self._min_match_length = kwargs.get('min_match_length', 3)
@@ -213,6 +218,9 @@ class WordDescrambler:
         if print_matches:
             self.print_matches()
 
+        print(f"{self.rt.runtime_string}")
+        self.rt.write_runtime(as_json=True)
+
     def print_matches(self):
         """
         Prints the list of matching words.
@@ -226,16 +234,17 @@ class WordDescrambler:
 
 if __name__ == '__main__':
     # TODO: GUI?
-    start_time = time.time()
-    rt = Runtime(start_time, use_timedelta=True)
-    # sleep_timer(5)
+
+    # TODO: pass this in as config kwarg
+    """WDConfig = WordDescramblerConfig(config_filename='config.ini', config_dir='../cfg')
+    config = WDConfig.GetConfig()"""
 
     WD = WordDescrambler(candidate_letters='AndrewMcspar',
+                         # these are kwargs
                          use_all_letters=False, use_basic_wordlist=False)#, limit_length=5)#'stfaamnrc')
     WD.search(print_matches=True)
 
-    print(f"{rt.runtime_string}")
-    rt.write_runtime(as_json=True)
+
 
 
     #print('craftsman' in [''.join(x) for x in permutations('stfaamnrc')])
