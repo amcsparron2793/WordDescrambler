@@ -1,6 +1,7 @@
 # given a list of letters, find any words that can be made with them (use wordlist) - perfect for multithreading
 import threading
 import time
+import warnings
 from os import system
 from typing import Optional
 
@@ -25,38 +26,70 @@ def sleep_timer(total_sleep_seconds):
 
 class WordDescrambler:
     """
-    WordDescrambler class
+        This class represents a word descrambler tool. It allows the user to descramble a given set of candidate letters
+        and find matching words from a word list.
 
-    A class used to descramble words based on a given set of candidate letters.
+        Attributes:
+            MAX_CANDIDATE_LENGTH (int): The maximum number of candidate letters supported.
+            DEFAULT_CONFIG_PATH (str): The default configuration file path.
 
-    Parameters:
-    - candidate_letters (str): The set of candidate letters used to descramble words.
-    - path_to_wordlist (Path or str, optional): The path to a wordlist file. If not provided, the default wordlist will be used. Defaults to None.
-    - **kwargs (optional): Additional keyword arguments.
+        Args:
+            candidate_letters (str): The set of candidate letters.
+            path_to_wordlist (Path or str, optional): The path to the word list file. If not provided, the default path
+                specified in the configuration file will be used.
+            kwargs: Additional keyword arguments.
 
-    Attributes:
-    - use_all_letters (bool): Whether to use all the candidate letters in a word. Defaults to False.
-    - _limit_length (int): The maximum length of the generated words. Defaults to None.
-    - _min_match_length (int): The minimum length of the matched words. Defaults to 3.
-    - verbose_mode (bool): Whether to display verbose output during the word descrambling process. Defaults to False.
-    - use_basic_wordlist (bool): Whether to use a basic wordlist. Defaults to False.
-    - _candidate_letters (list): The list of candidate letters.
-    - path_to_wordlist (Path): The path to the wordlist file.
-    - _wordlist (set): The set of words in the wordlist.
-    - match_list (set): The set of matched words.
-    - basic_wordlist (set): The set of words in the basic wordlist.
-    - full_wordlist (set): The set of words in the full wordlist.
-    - guess_counter (int): The count of guesses made during the word descrambling process.
+        Raises:
+            FileNotFoundError: If the word list file is not found at the specified path.
 
-    Methods:
-    - min_match_length(): Get the minimum match length based on the number of candidate letters.
-    - limit_length(): Get the limit length for generated words.
-    - candidate_letters(): Get the list of candidate letters.
-    - Wordlist(): Get the wordlist based on the provided path or default wordlist.
-    - Wordlist(value): Set the wordlist.
-    - _run_permutations(word_length): Run permutations to generate all possible words of a given length.
-    - search(print_matches): Search for words based on the candidate letters and print the matches.
-    - print_matches(): Print the matched words.
+        Properties:
+            min_match_length (int): The minimum match length.
+            limit_length (int or None): The limit length for candidate letters.
+            candidate_letters (list): The list of candidate letters.
+            wordlist (set): The wordlist for the software.
+
+        Methods:
+            search(): Perform a search with multiple threads.
+            print_matches(): Prints the list of matching words.
+
+        Static Methods:
+            _load_config(config_full_file_location: str) -> WordDescramblerConfig: Load and return the configuration.
+
+        Private Methods:
+            __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs): Initialize the WordDescrambler object.
+            _initialize_runtime_settings(self, kwargs: dict): Initialize the runtime settings.
+            _initialize_wordlists(self): Initialize the wordlists.
+            _extract_candidate_letters(letters: str) -> list: Convert the given letters to a list.
+            _search_worker(self, words_to_search): Search for words in a given list that match certain conditions.
+            _add_match(self, word): Add a matching word to the match list.
+            _load_wordlist(self): Load the wordlist from the path or use the basic/full wordlist.
+            _run_permutations(self, word_length: int): Run permutations of the candidate letters to find matches.
+            _chunks(iterable, size): Yield successive n-sized chunks from an iterable.
+            _get_words_per_column(self, **kwargs): Get the number of words per column for printing matches.
+
+        Attributes:
+            config (WordDescramblerConfig): The configuration object.
+            path_to_wordlist (Path): The path to the wordlist file.
+            config_full_file_location (str): The full file location of the configuration file.
+            _candidate_letters (list): The list of candidate letters.
+            guess_counter (int): The number of guesses made.
+            match_list_lock (threading.Lock): The lock for accessing the match list.
+            num_threads (int): The number of threads to use.
+            _use_timedelta (bool): Flag to use timedelta for runtime.
+            _rt_save_file_path (str): The path to save the runtime information.
+            _rt_export_as_json (bool): Flag to export runtime information as JSON.
+            _rt_export_as_text (bool): Flag to export runtime information as text.
+            _use_all_letters (bool): Flag to use all candidate letters for matching.
+            _limit_length (int or None): The limit length for candidate letters.
+            _min_match_length (int): The minimum match length.
+            _verbose_mode (bool): Flag for verbose mode.
+            _print_matches (bool): Flag to print matches.
+            _use_basic_wordlist (bool): Flag to use the basic wordlist.
+            runtime (Runtime): The runtime object.
+            _wordlist (set): The wordlist.
+            match_list (set): The list of matching words.
+            basic_wordlist (set): The set of words from the basic wordlist.
+            full_wordlist (set): The set of words from the full wordlist.
     """
     MAX_CANDIDATE_LENGTH = 5000
     DEFAULT_CONFIG_PATH = './cfg/config.ini'
@@ -108,15 +141,29 @@ class WordDescrambler:
 
     @staticmethod
     def _extract_candidate_letters(letters: str) -> list:
-        return list(letters)
+        return list(letters.lower())
 
     def _search_worker(self, words_to_search):
+        """
+        Searches for words in a given list that match certain conditions.
+
+        :param words_to_search: A list of words to search for matches.
+        :return: None
+
+        """
         for word in words_to_search:
-            if self._use_all_letters and set(word) == set(self._candidate_letters):
+            self.guess_counter += 1
+            if len(word) < self.min_match_length:
+                pass
+            elif self._use_all_letters and set(word) == set(self._candidate_letters):
                 self._add_match(word)
+                if self._verbose_mode:
+                    print(f"found a match at guess number {self.guess_counter:,}")
+
             elif not self._use_all_letters and all(letter in self._candidate_letters for letter in word):
                 self._add_match(word)
-
+                if self._verbose_mode:
+                    print(f"found a match at guess number {self.guess_counter:,}")
     @property
     def min_match_length(self) -> int:
         if len(self.candidate_letters) < self._min_match_length:
@@ -165,6 +212,9 @@ class WordDescrambler:
         if self.path_to_wordlist.is_file():
             with self.path_to_wordlist.open("r") as file:
                 self._wordlist = {line.strip().lower() for line in file.readlines()}
+                return
+        elif self.path_to_wordlist is not None and len(str(self.path_to_wordlist)) > 2:
+            raise FileNotFoundError(f"wordlist not found at {self.path_to_wordlist}")
         elif self._use_basic_wordlist:
             self._wordlist = self.basic_wordlist
         else:
@@ -195,15 +245,12 @@ class WordDescrambler:
         with self.match_list_lock:
             self.match_list.add(word)
 
-    def search(self, **kwargs):
+    def search(self):
         """
-        This method searches for words in a Wordlist object based on certain search parameters and prints the results.
+        Perform a search with multiple threads.
 
-        :param print_matches: A boolean indicating whether to print the found matches.
         :return: None
-
         """
-        #wordlist = list(self.basic_wordlist if self._use_basic_wordlist else self.full_wordlist)
         chunk_size = len(self.wordlist) // self.num_threads
         threads = []
 
@@ -238,7 +285,7 @@ class WordDescrambler:
         words_per_column = kwargs.get('words_per_column', self.config.getint('SEARCH', 'words_per_column'))
         column_number = kwargs.get('column_number', self.config.getint('SEARCH', 'column_number'))
 
-        if words_per_column >= 1 and column_number != 3:
+        if words_per_column >= 1 and column_number != 0:
             raise AttributeError('words_per_column and column number kwargs cannot be used at the same time.')
         elif words_per_column >= 1:
             column_number = int(len(self.match_list) / words_per_column)
@@ -258,19 +305,15 @@ class WordDescrambler:
         if use_columns:
             column_number = self._get_words_per_column(**kwargs)
 
-            for chunk in self._chunks(list(self.match_list), column_number):
+            for chunk in self._chunks(sorted(list(self.match_list)), column_number):
                 print(f"\t{', '.join(chunk)}")
         else:
             for match in self.match_list:
                 print(f"\t{match}")
+        print(f"{len(self.match_list):,} matches found.")
 
 
 if __name__ == '__main__':
-    WD = WordDescrambler(candidate_letters='AndrewJamesMcSparron', num_threads=16)
+    WD = WordDescrambler(candidate_letters='AndrewJamesMcSparron')#, use_basic_wordlist=True,)
     WD.search()
     WD.print_matches()
-
-
-
-
-    #print('craftsman' in [''.join(x) for x in permutations('stfaamnrc')])
