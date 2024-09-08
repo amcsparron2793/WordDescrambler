@@ -1,4 +1,5 @@
 # given a list of letters, find any words that can be made with them (use wordlist) - perfect for multithreading
+import threading
 import time
 from os import system
 from typing import Optional
@@ -57,7 +58,7 @@ class WordDescrambler:
     - search(print_matches): Search for words based on the candidate letters and print the matches.
     - print_matches(): Print the matched words.
     """
-    MAX_CANDIDATE_LENGTH = 12
+    MAX_CANDIDATE_LENGTH = 5000
     DEFAULT_CONFIG_PATH = './cfg/config.ini'
 
     def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
@@ -72,6 +73,9 @@ class WordDescrambler:
         self._initialize_wordlists()
 
         self.guess_counter = 0
+
+        self.match_list_lock = threading.Lock()
+        self.num_threads = kwargs.get('num_threads', 4)
 
     @staticmethod
     def _load_config(config_full_file_location: str) -> WordDescramblerConfig:
@@ -105,6 +109,13 @@ class WordDescrambler:
     @staticmethod
     def _extract_candidate_letters(letters: str) -> list:
         return list(letters)
+
+    def _search_worker(self, words_to_search):
+        for word in words_to_search:
+            if self._use_all_letters and set(word) == set(self._candidate_letters):
+                self._add_match(word)
+            elif not self._use_all_letters and all(letter in self._candidate_letters for letter in word):
+                self._add_match(word)
 
     @property
     def min_match_length(self) -> int:
@@ -180,6 +191,10 @@ class WordDescrambler:
                 if self._verbose_mode:
                     print(f"found a match at guess number {self.guess_counter:,}")
 
+    def _add_match(self, word):
+        with self.match_list_lock:
+            self.match_list.add(word)
+
     def search(self, **kwargs):
         """
         This method searches for words in a Wordlist object based on certain search parameters and prints the results.
@@ -188,29 +203,24 @@ class WordDescrambler:
         :return: None
 
         """
-        print_matches = kwargs.get('print_matches', self._print_matches)
-        if self._use_all_letters:
-            self.wordlist = {x.lower() for x in self.wordlist if len(x) == len(self.candidate_letters)}
-        else:
-            self.wordlist = {x.lower() for x in self.wordlist}
-        if self.limit_length:
-            self.wordlist = {x.lower() for x in self.wordlist if len(x) == self.limit_length}
+        #wordlist = list(self.basic_wordlist if self._use_basic_wordlist else self.full_wordlist)
+        chunk_size = len(self.wordlist) // self.num_threads
+        threads = []
 
-        print(f"Searching for words made up of {self.candidate_letters}...")
-        if self._use_all_letters:
-            self._run_permutations(len(self.candidate_letters))
-        elif self.limit_length:
-            self._run_permutations(self.limit_length)
-        else:
-            for r in range(self.min_match_length, len(self.candidate_letters)):
-                self._run_permutations(r)
+        for i in range(self.num_threads):
+            start_index = i * chunk_size
+            end_index = None if i == self.num_threads - 1 else (i + 1) * chunk_size
+            thread = threading.Thread(target=self._search_worker, args=(list(self.wordlist)[start_index:end_index],))
+            threads.append(thread)
+            thread.start()
 
-        print(f"{len(self.match_list)} matches found.")
-        if print_matches:
-            self.print_matches()
+        for thread in threads:
+            thread.join()
 
+        print(f"{len(self.match_list):,} matches found.")
         print(f"{self.runtime.runtime_string}")
         self.runtime.write_runtime(as_json=True)
+
 
     @staticmethod
     def _chunks(iterable, size):
@@ -256,10 +266,9 @@ class WordDescrambler:
 
 
 if __name__ == '__main__':
-    # TODO: GUI?
-
-    WD = WordDescrambler(candidate_letters='AndrewMcspar')
+    WD = WordDescrambler(candidate_letters='AndrewJamesMcSparron', num_threads=16)
     WD.search()
+    WD.print_matches()
 
 
 
