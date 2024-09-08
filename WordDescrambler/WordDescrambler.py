@@ -220,27 +220,6 @@ class WordDescrambler:
         else:
             self._wordlist = self.full_wordlist
 
-    def _run_permutations(self, word_length: int):
-        """
-        :param word_length: The length of the words to generate permutations for.
-        :return: None
-
-        This method runs permutations of the candidate letters to find matches in the given word list.
-        It increments the guess counter with each iteration and adds any matches found to the match list.
-        If verbose mode is enabled, it also prints the guess number when a match is found.
-
-        Example Usage:
-            obj = Object()
-            obj._run_permutations(4)
-        """
-        for p in permutations(''.join(self.candidate_letters), word_length):  # , self.wordlist):
-            self.guess_counter += 1
-            if ''.join(p) in self.wordlist:
-                # print(f"{''.join(p)} was found in candidate letters.")
-                self.match_list.add(''.join(p))
-                if self._verbose_mode:
-                    print(f"found a match at guess number {self.guess_counter:,}")
-
     def _add_match(self, word):
         with self.match_list_lock:
             self.match_list.add(word)
