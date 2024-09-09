@@ -1,16 +1,13 @@
 # given a list of letters, find any words that can be made with them (use wordlist) - perfect for multithreading
 import threading
 import time
-import warnings
 from os import system
 from typing import Optional
 
 from Runtime import Runtime
 from pathlib import Path
-from itertools import permutations
 from nltk.corpus import words
 from WDConfig import WordDescramblerConfig
-
 
 def sleep_timer(total_sleep_seconds):
     """
@@ -245,7 +242,8 @@ class WordDescrambler:
 
         print(f"{len(self.match_list):,} matches found.")
         print(f"{self.runtime.runtime_string}")
-        self.runtime.write_runtime(as_json=True)
+        # FIXME: throws a file not found error when used with GUI?
+        self.runtime.write_runtime(as_json=True, file_path=self._rt_save_file_path)
 
 
     @staticmethod
