@@ -1,6 +1,4 @@
 import tkinter as tk
-from WordDescrambler import WordDescrambler
-
 
 class WordDescramblerGUI:
     """
@@ -45,13 +43,13 @@ class WordDescramblerGUI:
 
         self.init_main_widgets()
 
-    def main_submit_pressed(self):
-        # FIXME: this throws a file not found error when trying to write to ./Misc_Project_File
-        #  config is being rewritten into ./WordDescrambler/cfg/config.ini - that's why this is happening i think?
-        wd = WordDescrambler(self._candidate_letters_value.get())
-        wd.search()
-        wd.print_matches()
-        print('submit was pressed')
+    def _main_submit_pressed(self):
+        self.run_game()
+
+    def run_game(self):
+        raise NotImplemented("this needs to be overwritten to function")
+
+
 
     def options_pressed(self):
         self.options_window = tk.Tk('Options')
@@ -84,7 +82,7 @@ class WordDescramblerGUI:
         self._submit_button = tk.Button(master=self.main_window,
                                         text="Submit",
                                         name="submit_button",
-                                        command=self.main_submit_pressed)
+                                        command=self._main_submit_pressed)
         self._options_button = tk.Button(master=self.main_window,
                                          text="Options",
                                          name="options_button",

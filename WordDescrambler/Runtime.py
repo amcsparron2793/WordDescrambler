@@ -153,7 +153,7 @@ class Runtime:
         return self._runtime_hours
 
     def write_runtime(self, **kwargs):
-        save_file_path = Path(kwargs.get('save_file_path', './Misc_Project_Files/last_runtime.txt'))
+        save_file_path = Path(kwargs.get('save_file_path', '../Misc_Project_Files/last_runtime.txt'))
         as_text = kwargs.get('as_text', False)
         as_json = kwargs.get('as_json', False)
 

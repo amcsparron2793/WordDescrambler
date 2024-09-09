@@ -64,25 +64,25 @@ python word_descrambler.py --letters "example"
 
 ### Script
 
-Here's an example of how to utilize the `WordDescrambler` class in your Python scripts:
+Here's an example of how to utilize the `WordDescramblerCore` class in your Python scripts:
 
 ```python
 from pathlib import Path
-from WordDescrambler.WordDescrambler import WordDescrambler
+from WordDescramblerCore.WordDescramblerCore import WordDescramblerCore
 
 # Configuration and candidate letters
 candidate_letters = "example" 
 config_path = Path("./cfg/config.ini")
 
 # Instantiate and run the word descrambler
-descrambler = WordDescrambler(candidate_letters, config_path, use_timedelta=True)
+descrambler = WordDescramblerCore(candidate_letters, config_path, use_timedelta=True)
 descrambler.search()
 descrambler.print_matches()
 ```
 
 ## Classes and Methods
 
-### `WordDescrambler` Class
+### `WordDescramblerCore` Class
 
 #### Constructor
 
