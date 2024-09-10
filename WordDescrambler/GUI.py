@@ -74,6 +74,7 @@ class WordDescramblerGUI:
         return self._initialized_widgets
 
     def init_options_widgets(self):
+        # TODO: add in all the config options
         self._close_options_button = tk.Button(master=self.options_window, name='close_options_button',
                                               text='Close',
                                               command=self.options_window.destroy)
