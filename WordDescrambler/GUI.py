@@ -51,9 +51,9 @@ class WordDescramblerGUI:
             # TODO: add error messages
             pass
         else:
-            self.run_game()
+            self.run_tool()
 
-    def run_game(self):
+    def run_tool(self):
         raise NotImplemented("this needs to be overwritten to function")
 
     def show_results(self, results_info, number_of_matches):
