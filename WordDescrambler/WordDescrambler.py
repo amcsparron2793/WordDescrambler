@@ -7,6 +7,7 @@ class WordDescrambler(WordDescramblerGUI, WordDescramblerCore):
 
     def run_game(self):
         WordDescramblerCore.__init__(self, candidate_letters=self._candidate_letters_value.get())
+        # FIXME: bug where config.ini doesnt work?
         self.search()
 
         match_string = self.print_matches()
