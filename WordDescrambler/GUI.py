@@ -32,11 +32,14 @@ class WordDescramblerGUI:
         self._main_title_label = None
         self._candidate_letters_value = None
         self._candidate_letters_label = None
+        self.results_info = None
         self._submit_button = None
         self._options_button = None
+        self._quit_button = None
         self._initialized_widgets = None
         self._close_options_button = None
         self.options_window = None
+        self.results_window = None
 
         self.main_window = tk.Tk()
         self.main_window.title(self.TITLE_TEXT)
@@ -44,12 +47,18 @@ class WordDescramblerGUI:
         self.init_main_widgets()
 
     def _main_submit_pressed(self):
-        self.run_game()
+        if self._candidate_letters_value.get() == '':
+            # TODO: add error messages
+            pass
+        else:
+            self.run_game()
 
     def run_game(self):
         raise NotImplemented("this needs to be overwritten to function")
 
-
+    def show_results(self, results_info, number_of_matches):
+        self.results_window = tk.Tk('Results')
+        self.init_results_widgets(results_info=results_info, number_of_matches=number_of_matches)
 
     def options_pressed(self):
         self.options_window = tk.Tk('Options')
@@ -69,7 +78,16 @@ class WordDescramblerGUI:
                                               text='Close',
                                               command=self.options_window.destroy)
 
-
+    def init_results_widgets(self, results_info, number_of_matches:int):
+        self.results_info = tk.Text(self.results_window, name='results_info')#,text=results_info)
+        self.results_info.insert(tk.END, f"{number_of_matches:,} Results:\n")
+        self.results_info.insert(tk.END, results_info)
+        self.results_close_button = tk.Button(master=self.results_window,
+                                              name='results_close_button',
+                                              text='Close',
+                                              command=self.results_window.destroy)
+        for widget in self.results_window.winfo_children():
+            widget.pack()
 
     def init_main_widgets(self):
         self._main_title_label = tk.Label(self.main_window, text=self.TITLE_TEXT,
@@ -87,6 +105,10 @@ class WordDescramblerGUI:
                                          text="Options",
                                          name="options_button",
                                          command=self.options_pressed)
+        self._quit_button = tk.Button(master=self.main_window,
+                                         text="Quit",
+                                         name="quit_button",
+                                         command=self.main_window.quit)
 
     def pack_widgets(self):
         for widget in self.initialized_widgets:
@@ -95,7 +117,3 @@ class WordDescramblerGUI:
     def pack_and_run(self):
         self.pack_widgets()
         self.main_window.mainloop()
-
-if __name__ == '__main__':
-    wd_GUI = WordDescramblerGUI()
-    wd_GUI.pack_and_run()

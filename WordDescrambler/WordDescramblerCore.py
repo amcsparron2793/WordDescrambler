@@ -277,16 +277,20 @@ class WordDescramblerCore:
         :return: None
         """
         use_columns = kwargs.get('use_columns', self.config.getboolean('SEARCH', 'use_columns'))
+        final_str = str()
         print("Matching Words:")
         if use_columns:
             column_number = self._get_words_per_column(**kwargs)
 
             for chunk in self._chunks(sorted(list(self.match_list)), column_number):
                 print(f"\t{', '.join(chunk)}")
+                final_str += f"\t{', '.join(chunk)}\n"
         else:
             for match in self.match_list:
                 print(f"\t{match}")
+                final_str += f"\t{match}\n"
         print(f"{len(self.match_list):,} matches found.")
+        return final_str
 
 
 if __name__ == '__main__':
