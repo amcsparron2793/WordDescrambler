@@ -153,7 +153,8 @@ class Runtime:
         return self._runtime_hours
 
     def write_runtime(self, **kwargs):
-        save_file_path = Path(kwargs.get('save_file_path', '../Misc_Project_Files/last_runtime.txt'))
+        # FIXME: save file path needs a more flexible default
+        save_file_path = Path(kwargs.get('save_file_path', './Misc_Project_Files/last_runtime.txt'))
         as_text = kwargs.get('as_text', False)
         as_json = kwargs.get('as_json', False)
 
@@ -168,11 +169,14 @@ class Runtime:
         elif as_json:
             if save_file_path.suffix != '.json':
                 save_file_path = save_file_path.with_suffix('.json')
-            with open(save_file_path, 'w') as f:
-                import json
-                json.dump({'program_start_time': self.pretty_start_time,
-                           'program_runtime': self.runtime},
-                          f, indent=4)
-            print(f"runtime output to {save_file_path.resolve()}")
+            try:
+                with open(save_file_path, 'w') as f:
+                    import json
+                    json.dump({'program_start_time': self.pretty_start_time,
+                               'program_runtime': self.runtime},
+                              f, indent=4)
+                print(f"runtime output to {save_file_path.resolve()}")
+            except FileNotFoundError as e:
+                print(e)
         else:
             raise ValueError("Invalid output format. as_text or as_json must be True.")
