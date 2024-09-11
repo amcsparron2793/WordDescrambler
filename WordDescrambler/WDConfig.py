@@ -3,7 +3,6 @@ from pathlib import Path
 
 class WordDescramblerConfig(BetterConfigAJM):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.default_config = [{
             'DEFAULT': {
                 'use_all_letters': False,
@@ -31,6 +30,8 @@ class WordDescramblerConfig(BetterConfigAJM):
                 'column_number': 3
             }
         }]
+        super().__init__(*args, **kwargs)
+
         if 'config_list_dict' in kwargs:
             self.config_list_dict = kwargs['config_list_dict']
         else:
