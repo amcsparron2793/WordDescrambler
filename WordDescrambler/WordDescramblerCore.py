@@ -98,7 +98,7 @@ class WordDescramblerCore:
 
         self.path_to_wordlist = Path(path_to_wordlist) if path_to_wordlist else Path(
             self.config.get('WORDLIST', 'path_to_wordlist'))
-
+        # FIXME: turn this into a property so that the fixme in WordDescrambler will work with candidate_letters=None
         self._candidate_letters = self._extract_candidate_letters(candidate_letters)
         self._initialize_wordlists()
 
