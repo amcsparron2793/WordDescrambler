@@ -91,15 +91,14 @@ class WordDescramblerCore:
     MAX_CANDIDATE_LENGTH = 5000
     DEFAULT_CONFIG_PATH = '../cfg/config.ini'
 
-    def __init__(self, candidate_letters: str, path_to_wordlist: Path or str = None, **kwargs):
+    def __init__(self, candidate_letters: str = None, path_to_wordlist: Path or str = None, **kwargs):
         self.config = self._load_config(kwargs.get('config_full_file_location', self.DEFAULT_CONFIG_PATH))
 
         self._initialize_runtime_settings(kwargs)
 
         self.path_to_wordlist = Path(path_to_wordlist) if path_to_wordlist else Path(
             self.config.get('WORDLIST', 'path_to_wordlist'))
-        # FIXME: turn this into a property so that the fixme in WordDescrambler will work with candidate_letters=None
-        self._candidate_letters = self._extract_candidate_letters(candidate_letters)
+        self._candidate_letters = candidate_letters#self._extract_candidate_letters(candidate_letters)
         self._initialize_wordlists()
 
         self.guess_counter = 0
@@ -187,10 +186,14 @@ class WordDescramblerCore:
         return self._limit_length
 
     @property
-    def candidate_letters(self) -> list:
+    def candidate_letters(self) -> str:
         if len(self._candidate_letters) > self.MAX_CANDIDATE_LENGTH:
             raise ValueError(f'Too many candidate letters. Max characters supported is {self.MAX_CANDIDATE_LENGTH}')
         return self._candidate_letters
+
+    @candidate_letters.setter
+    def candidate_letters(self, value: str):
+        self._candidate_letters = self._extract_candidate_letters(value)
 
     @property
     def wordlist(self):
