@@ -6,6 +6,7 @@ class WordDescrambler(WordDescramblerGUI, WordDescramblerCore):
         self.DEFAULT_CONFIG_PATH = './cfg/config.ini'
         WordDescramblerGUI.__init__(self)
         WordDescramblerCore.__init__(self, candidate_letters=None)
+        # TODO: add GUI options support
 
 
     def run_tool(self):
