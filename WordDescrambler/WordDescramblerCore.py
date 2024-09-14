@@ -1,4 +1,5 @@
 # given a list of letters, find any words that can be made with them (use wordlist) - perfect for multithreading
+from logging import getLogger
 import threading
 import time
 from os import system
@@ -92,6 +93,7 @@ class WordDescramblerCore:
     DEFAULT_CONFIG_PATH = '../cfg/config.ini'
 
     def __init__(self, candidate_letters: str = None, path_to_wordlist: Path or str = None, **kwargs):
+        self.logger = kwargs.get('logger', getLogger('dummy_logger'))
         self.config = self._load_config(kwargs.get('config_full_file_location', self.DEFAULT_CONFIG_PATH))
 
         self._initialize_runtime_settings(kwargs)
@@ -105,11 +107,13 @@ class WordDescramblerCore:
 
         self.match_list_lock = threading.Lock()
         self.num_threads = kwargs.get('num_threads', 4)
+        self.logger.info(f'{self.__class__.__name__} initialized with {self.num_threads} threads.')
 
-    @staticmethod
-    def _load_config(config_full_file_location: str) -> WordDescramblerConfig:
+
+    def _load_config(self, config_full_file_location: str) -> WordDescramblerConfig:
         config_full_file_location = Path(config_full_file_location)
         config_filename = config_full_file_location.stem + config_full_file_location.suffix
+        self.logger.info(f"Attempting to load {config_full_file_location}")
         return WordDescramblerConfig(config_filename=config_filename,
                                      config_dir=config_full_file_location.parent).GetConfig()
 
@@ -128,12 +132,14 @@ class WordDescramblerCore:
         self._use_basic_wordlist = kwargs.get('use_basic_wordlist',
                                               self.config.getboolean('WORDLIST', 'use_basic_wordlist'))
         self.runtime = Runtime(time.time(), use_timedelta=self._use_timedelta)
+        self.logger.info(f'Runtime class settings and instance initialized.')
 
     def _initialize_wordlists(self):
         self._wordlist = set()
         self.match_list = set()
         self.basic_wordlist = {w.lower() for w in words.words('en-basic')}
         self.full_wordlist = {w.lower() for w in words.words()}
+        self.logger.info('Wordlists initialized.')
 
     @staticmethod
     def _extract_candidate_letters(letters: str) -> list:
@@ -160,6 +166,7 @@ class WordDescramblerCore:
                 self._add_match(word)
                 if self._verbose_mode:
                     print(f"found a match at guess number {self.guess_counter:,}")
+
     @property
     def min_match_length(self) -> int:
         if len(self.candidate_letters) < self._min_match_length:
@@ -217,8 +224,11 @@ class WordDescramblerCore:
             raise FileNotFoundError(f"wordlist not found at {self.path_to_wordlist}")
         elif self._use_basic_wordlist:
             self._wordlist = self.basic_wordlist
+            self.logger.info("basic_wordlist loaded.")
         else:
             self._wordlist = self.full_wordlist
+            self.logger.info("full_wordlist loaded.")
+
 
     def _add_match(self, word):
         with self.match_list_lock:
@@ -232,6 +242,8 @@ class WordDescramblerCore:
         """
         chunk_size = len(self.wordlist) // self.num_threads
         threads = []
+        self.logger.info(f'searching with {self.num_threads} threads and a chunk size of {chunk_size:,}.')
+
 
         for i in range(self.num_threads):
             start_index = i * chunk_size
@@ -243,8 +255,8 @@ class WordDescramblerCore:
         for thread in threads:
             thread.join()
 
-        print(f"{len(self.match_list):,} matches found.")
-        print(f"{self.runtime.runtime_string}")
+        self.logger.info(f"{len(self.match_list):,} matches found.")
+        self.logger.info(f"{self.runtime.runtime_string}")
         self.runtime.write_runtime(as_json=True, file_path=self._rt_save_file_path)
 
 

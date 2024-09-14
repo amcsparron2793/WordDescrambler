@@ -1,4 +1,6 @@
 import tkinter as tk
+from logging import getLogger
+from tkinter import messagebox
 
 class WordDescramblerGUI:
     """
@@ -28,7 +30,8 @@ class WordDescramblerGUI:
     """
     TITLE_TEXT = "Word Descrambler"
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self.logger = kwargs.get('logger', getLogger('dummy_logger'))
         self._main_title_label = None
         self._candidate_letters_value = None
         self._candidate_letters_label = None
@@ -45,11 +48,14 @@ class WordDescramblerGUI:
         self.main_window.title(self.TITLE_TEXT)
 
         self.init_main_widgets()
+        self.logger.info(f'{self.__class__.__name__} initialized')
 
     def _main_submit_pressed(self):
+        self.logger.debug('submit button pressed')
         if self._candidate_letters_value.get() == '':
-            # TODO: add error messages
-            pass
+            messagebox.showerror("Please enter candidate letters",
+                                 "Please enter candidate letters and submit again.")
+            self.logger.warning("candidate letters cannot be None")
         else:
             self.run_tool()
 
@@ -61,16 +67,19 @@ class WordDescramblerGUI:
         self.init_results_widgets(results_info=results_info, number_of_matches=number_of_matches)
 
     def options_pressed(self):
+        self.logger.debug('options was pressed')
         self.options_window = tk.Tk('Options')
         self.init_options_widgets()
         for widget in self.options_window.winfo_children():
             widget.pack()
-        print('options was pressed')
+        self.logger.info('all options widgets initialized and packed')
 
     @property
     def initialized_widgets(self):
         # FIXME: how do i add in secondary windows after the fact?
         self._initialized_widgets = [x for x in self.main_window.winfo_children()]
+        self.logger.info(f"{len(self._initialized_widgets)} widgets initialized")
+        self.logger.debug(f"including {self._initialized_widgets}")
         return self._initialized_widgets
 
     def init_options_widgets(self):
@@ -87,8 +96,10 @@ class WordDescramblerGUI:
                                               name='results_close_button',
                                               text='Close',
                                               command=self.results_window.destroy)
+        self.logger.info('results window widgets initialized')
         for widget in self.results_window.winfo_children():
             widget.pack()
+        self.logger.info('results window widgets packed')
 
     def init_main_widgets(self):
         self._main_title_label = tk.Label(self.main_window, text=self.TITLE_TEXT,
@@ -111,10 +122,17 @@ class WordDescramblerGUI:
                                          name="quit_button",
                                          command=self.main_window.quit)
 
+        self.logger.info('main window widgets initialized')
+
+
     def pack_widgets(self):
         for widget in self.initialized_widgets:
             widget.pack()
+        self.logger.info('all initialized widgets packed')
+
 
     def pack_and_run(self):
         self.pack_widgets()
+        self.logger.info('widgets packed and main window starting...')
         self.main_window.mainloop()
+

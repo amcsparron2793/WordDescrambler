@@ -6,3 +6,4 @@ regex==2024.7.24
 tqdm==4.66.5
 
 BetterConfigAJM~=0.1
+EasyLoggerAJM~=1.1
