@@ -76,6 +76,38 @@ class WordDescramblerGUI:
         self.init_options_widgets()
         self.logger.info('all options widgets initialized and packed')
 
+    # TODO: refine this with appropriate widgets for each Type,
+    #  and make sure they all change their associated config option
+    def _create_options_widgets(self):
+        row = 0
+        options_widgets = {}
+        if hasattr(self, 'config'):
+            for section in self.config.sections():
+                lbl = ttk.Label(self.options_window, text=section, font=('Arial', 12, 'bold'))
+                lbl.grid(row=row, column=0, padx=10, pady=(10, 5), columnspan=2, sticky="W")
+                row += 1  # Move to the next row
+
+                for option, default in self.config.items(section):
+                    # Create a label
+                    lbl = ttk.Label(self.options_window, text=option)
+                    lbl.grid(row=row, column=0, padx=10, pady=5)
+
+                    # Create an Entry widget
+                    entry = ttk.Entry(self.options_window)
+                    entry.insert(0, default)
+                    entry.grid(row=row, column=1, padx=10, pady=5)
+
+                    # Save reference of the entry widget
+                    options_widgets[f"{section}.{option}"] = entry
+
+                    row += 1  # Move to the next row
+        else:
+            msg_text = 'options widget could not be initialized, use manual ini file'
+            messagebox.showerror('options widget could not be initialized',
+                                 msg_text)
+            self.logger.warning(msg_text)
+            self.options_window.destroy()
+
     @property
     def initialized_widgets(self):
         # FIXME: how do i add in secondary windows after the fact?
@@ -85,20 +117,14 @@ class WordDescramblerGUI:
         return self._initialized_widgets
 
     def init_options_widgets(self):
-        # FIXME: this doesnt work exactly right, see output.
-        for idx, (name, default) in enumerate(self._config_options.items()):
-            # Create a label for the option
-            label = ttk.Label(self.options_window, text=name)
-            label.grid(row=idx, column=0, padx=10, pady=5)
-
-            # Create an entry widget for the option
-            entry = ttk.Entry(self.options_window)
-            entry.insert(0, default)
-            entry.grid(row=idx, column=1, padx=10, pady=5)
-
-        self._close_options_button = tk.Button(master=self.options_window, name='close_options_button',
-                                              text='Close',
-                                              command=self.options_window.destroy)
+        self._create_options_widgets()
+        try:
+            self._close_options_button = tk.Button(master=self.options_window, name='close_options_button',
+                                                  text='Close',
+                                                  command=self.options_window.destroy)
+        except tk.TclError as e:
+            self.logger.debug(e)
+            pass
 
     def init_results_widgets(self, results_info, number_of_matches:int):
         self.results_info = tk.Text(self.results_window, name='results_info')#,text=results_info)
