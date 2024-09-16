@@ -1,6 +1,8 @@
+from pathlib import Path
 from WordDescramblerCore import WordDescramblerCore
 from GUI import WordDescramblerGUI
 from WDLogger import WDLogger
+from WDConfig import WordDescramblerConfig
 
 
 class WordDescrambler(WordDescramblerGUI, WordDescramblerCore):
@@ -10,7 +12,10 @@ class WordDescrambler(WordDescramblerGUI, WordDescramblerCore):
                                                       project_name=self.__class__.__name__).logger)
         self.DEFAULT_CONFIG_PATH = './cfg/config.ini'
         self.logger.debug(F"DEFAULT_CONFIG_PATH set to : {self.DEFAULT_CONFIG_PATH}")
-        WordDescramblerGUI.__init__(self, logger=self.logger)
+        self.config = self._load_config(kwargs.get('config_full_file_location', self.DEFAULT_CONFIG_PATH))
+
+        WordDescramblerGUI.__init__(self, logger=self.logger, config_options=self.config)
+
         self.logger.info("WordDescramblerGUI initialized")
         WordDescramblerCore.__init__(self, candidate_letters=None, logger=self.logger)
         self.logger.info("WordDescramblerCore initialized")

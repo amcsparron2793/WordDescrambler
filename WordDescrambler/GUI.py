@@ -1,6 +1,9 @@
 import tkinter as tk
-from logging import getLogger
+from tkinter import ttk
 from tkinter import messagebox
+
+from logging import getLogger
+
 
 class WordDescramblerGUI:
     """
@@ -43,6 +46,7 @@ class WordDescramblerGUI:
         self._close_options_button = None
         self.options_window = None
         self.results_window = None
+        self._config_options = kwargs.get('config_options', {})
 
         self.main_window = tk.Tk()
         self.main_window.title(self.TITLE_TEXT)
@@ -70,8 +74,6 @@ class WordDescramblerGUI:
         self.logger.debug('options was pressed')
         self.options_window = tk.Tk('Options')
         self.init_options_widgets()
-        for widget in self.options_window.winfo_children():
-            widget.pack()
         self.logger.info('all options widgets initialized and packed')
 
     @property
@@ -83,7 +85,17 @@ class WordDescramblerGUI:
         return self._initialized_widgets
 
     def init_options_widgets(self):
-        # TODO: add in all the config options
+        # FIXME: this doesnt work exactly right, see output.
+        for idx, (name, default) in enumerate(self._config_options):
+            # Create a label for the option
+            label = ttk.Label(self.options_window, text=name)
+            label.grid(row=idx, column=0, padx=10, pady=5)
+
+            # Create an entry widget for the option
+            entry = ttk.Entry(self.options_window)
+            entry.insert(0, default)
+            entry.grid(row=idx, column=1, padx=10, pady=5)
+
         self._close_options_button = tk.Button(master=self.options_window, name='close_options_button',
                                               text='Close',
                                               command=self.options_window.destroy)
