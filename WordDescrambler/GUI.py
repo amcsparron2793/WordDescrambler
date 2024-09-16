@@ -86,7 +86,7 @@ class WordDescramblerGUI:
 
     def init_options_widgets(self):
         # FIXME: this doesnt work exactly right, see output.
-        for idx, (name, default) in enumerate(self._config_options):
+        for idx, (name, default) in enumerate(self._config_options.items()):
             # Create a label for the option
             label = ttk.Label(self.options_window, text=name)
             label.grid(row=idx, column=0, padx=10, pady=5)
