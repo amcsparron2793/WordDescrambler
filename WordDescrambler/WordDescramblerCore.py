@@ -161,7 +161,7 @@ class WordDescramblerCore:
                 self._add_match(word)
                 if self._verbose_mode:
                     print(f"found a match at guess number {self.guess_counter:,}")
-
+            # FIXME: make sure that letters cannot be reused more than they appear in the candidate letters
             elif not self._use_all_letters and all(letter in self._candidate_letters for letter in word):
                 self._add_match(word)
                 if self._verbose_mode:
