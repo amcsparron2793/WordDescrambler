@@ -91,14 +91,23 @@ class WordDescramblerGUI:
                     # Create a label
                     lbl = ttk.Label(self.options_window, text=option)
                     lbl.grid(row=row, column=0, padx=10, pady=5)
-
-                    # Create an Entry widget
-                    entry = ttk.Entry(self.options_window)
-                    entry.insert(0, default)
-                    entry.grid(row=row, column=1, padx=10, pady=5)
-
-                    # Save reference of the entry widget
-                    options_widgets[f"{section}.{option}"] = entry
+                    if default == 'True' or default == 'False':
+                        var = tk.BooleanVar(name=option)
+                        var.set(default == 'True')
+                        # FIXME: THIS DOES NOT CHANGE THE DEFAULT VALUE TO FALSE,
+                        #  THEY ALWAYS START AS TRUE, THIS IS NOT INTENDED
+                        print(var.get())
+                        entry = ttk.Checkbutton(self.options_window, variable=var)
+                        entry.grid(row=row, column=1, padx=10, pady=5)
+                        # Save reference of the entry widget
+                        options_widgets[f"{section}.{option}"] = var
+                    else:
+                        # Create an Entry widget
+                        entry = ttk.Entry(self.options_window)
+                        entry.insert(0, default)
+                        entry.grid(row=row, column=1, padx=10, pady=5)
+                        # Save reference of the entry widget
+                        options_widgets[f"{section}.{option}"] = entry
 
                     row += 1  # Move to the next row
         else:
